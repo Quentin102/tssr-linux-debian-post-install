@@ -97,27 +97,33 @@ else
 fi
 
 # === 6. AJOUT D'UNE CLÉ SSH PUBLIQUE ===
-if ask_yes_no "Would you like to add a public SSH key?"; then
-  read -p "Paste your public SSH key: " ssh_key
-  mkdir -p "$USER_HOME/.ssh"
-  echo "$ssh_key" >> "$USER_HOME/.ssh/authorized_keys"
-  chown -R "$USERNAME:$USERNAME" "$USER_HOME/.ssh"
-  chmod 700 "$USER_HOME/.ssh"
-  chmod 600 "$USER_HOME/.ssh/authorized_keys"
-  log "SSH public key added."
+if ask_yes_no "Would you like to add a public SSH key?"; then # demande si tu veux add une clé ssh en appelant une autre fonction
+  read -p "Paste your public SSH key: " ssh_key # Affiche un message et te dit d'écrire ta clé publique
+  mkdir -p "$USER_HOME/.ssh" # crée le dossier .ssh
+  echo "$ssh_key" >> "$USER_HOME/.ssh/authorized_keys" # crée le fichier authorized_keys et y ajoute ta clé publique
+  chown -R "$USERNAME:$USERNAME" "$USER_HOME/.ssh" # te met propio du dossier
+  chmod 700 "$USER_HOME/.ssh" # défini les droits du dossier
+  chmod 600 "$USER_HOME/.ssh/authorized_keys"# défini les droits du fichier
+  log "SSH public key added." #affiche que la clé ssh à été ajouté
 fi
 
 # === 7. CONFIGURATION DE SSH POUR AUTHENTIFICATION PAR CLÉ UNIQUEMENT ===
-if [ -f /etc/ssh/sshd_config ]; then
+if [ -f /etc/ssh/sshd_config ]; then # si le fichier sshd_config existe il fait la suite
+# pour les lignes suivantes, sed = modifier un fichier, -i = modifier sans créer de copie
+# "s" en début du chemin pour dire que l'élément A sera remplacé par l'élément B
+# "^#\?" signifie qu'il va commencer à chercher en début de ligne les hashtag puis ce qu'il y a derriere qui contient
+# par exmple "PasswordAuthentication" pour remplacer tout ca par PasswordAuthentication no
+# ce processus est répété 3 fois pour changer 3 paramètres différents
   sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
   sed -i 's/^#\?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
   sed -i 's/^#\?PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
-  systemctl restart ssh
-  log "SSH configured to accept key-based authentication only."
-else
+  systemctl restart ssh # redémarre ssh
+  log "SSH configured to accept key-based authentication only." # affiche que la conf ssh à été sécurisé
+else # si il ne trouve pas sshd_config il affiche juste ce message d'erreur
   log "sshd_config file not found."
 fi
 
+#affiche que le script à fini d'etre exécuté
 log "Post-installation script completed."
 
 exit 0
