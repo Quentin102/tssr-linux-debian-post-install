@@ -126,4 +126,4 @@ fi
 #affiche que le script à fini d'etre exécuté
 log "Post-installation script completed."
 
-exit 0
+exit 0 # met fin au script
