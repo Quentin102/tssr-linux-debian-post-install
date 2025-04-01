@@ -19,14 +19,14 @@ log() {
 # Vérifie si un paquet est installé, sinon l'installe
 check_and_install() {
   local pkg=$1
-  if dpkg -s "$pkg" &>/dev/null; then
-    log "$pkg is already installed."
+  if dpkg -s "$pkg" &>/dev/null; then # Vérifie si dpkg est installé 
+    log "$pkg is already installed." # envoie un log pour qui qu'il est deja installé
   else
-    log "Installing $pkg..."
-    apt install -y "$pkg" &>>"$LOG_FILE"
-    if [ $? -eq 0 ]; then
+    log "Installing $pkg..." # sinon dire qu'il est en cours d'installation
+    apt install -y "$pkg" &>>"$LOG_FILE" # installation du packet et envoie le code erreur dans log
+    if [ $? -eq 0 ]; then # il prends le code de la derniere commande avec $? et si l'installation réussi, il envoie un log dans ce sens
       log "$pkg successfully installed."
-    else
+    else # sinon il envoie un log dans le sens contraire
       log "Failed to install $pkg."
     fi
   fi
@@ -34,7 +34,7 @@ check_and_install() {
 
 # Demande à l'utilisateur une confirmation (Oui/Non)
 ask_yes_no() {
-  read -p "$1 [y/N]: " answer
+  read -p "$1 [y/N]: " answer # équivalent du input() en python
   case "$answer" in
     [Yy]* ) return 0 ;;  # Retourne vrai si la réponse est oui
     * ) return 1 ;;  # Retourne faux sinon
@@ -48,45 +48,47 @@ touch "$LOG_FILE"  # Création du fichier de log
 log "Starting post-installation script. Logged user: $USERNAME"
 
 # Vérifie si le script est exécuté en tant que root
-if [ "$EUID" -ne 0 ]; then
+if [ "$EUID" -ne 0 ]; then # EUID = l'utilisateur utilisé, -ne = n'est pas égal, 0 = user root.
+#donc si l'utilisateur utilisé n'est pas root, le script s'arrete 
   log "This script must be run as root."
   exit 1
 fi
 
 # === 1. MISE À JOUR DU SYSTÈME ===
 log "Updating system packages..."
-apt update && apt upgrade -y &>>"$LOG_FILE"
+apt update && apt upgrade -y &>>"$LOG_FILE" #installe et capture le code d'erreur
 
 # === 2. INSTALLATION DES PAQUETS ===
-if [ -f "$PACKAGE_LIST" ]; then
-  log "Reading package list from $PACKAGE_LIST"
-  while IFS= read -r pkg || [[ -n "$pkg" ]]; do
+if [ -f "$PACKAGE_LIST" ]; then #-f vérifie si le fichier exite
+  log "Reading package list from $PACKAGE_LIST" #indique qu'il lit le fichier
+  while IFS= read -r pkg || [[ -n "$pkg" ]]; do # faire une boucle qui parcours toutes les lignes en ignorant
+  # les commentaires et les espaces vides, a chaque ligne il lui reste donc uniquement le nom du packet à installer et il l'installe
     [[ -z "$pkg" || "$pkg" =~ ^# ]] && continue  # Ignore les lignes vides et les commentaires
     check_and_install "$pkg"
   done < "$PACKAGE_LIST"
-else
+else #si il ne trouve pas le fichier il renvoie ca
   log "Package list file $PACKAGE_LIST not found. Skipping package installation."
 fi
 
 # === 3. MISE À JOUR DU MESSAGE DU JOUR (MOTD) ===
-if [ -f "$CONFIG_DIR/motd.txt" ]; then
-  cp "$CONFIG_DIR/motd.txt" /etc/motd
-  log "MOTD updated."
+if [ -f "$CONFIG_DIR/motd.txt" ]; then #vérifie si le fichier existe
+  cp "$CONFIG_DIR/motd.txt" /etc/motd #si il existe il le copie vers le répertoire motd
+  log "MOTD updated." #annonce que motd est mis a jour
 else
   log "motd.txt not found."
 fi
 
 # === 4. PERSONNALISATION DU .bashrc ===
-if [ -f "$CONFIG_DIR/bashrc.append" ]; then
-  cat "$CONFIG_DIR/bashrc.append" >> "$USER_HOME/.bashrc"
-  chown "$USERNAME:$USERNAME" "$USER_HOME/.bashrc"
+if [ -f "$CONFIG_DIR/bashrc.append" ]; then #vérifie si le fichier existe, 
+  cat "$CONFIG_DIR/bashrc.append" >> "$USER_HOME/.bashrc" #si il existe il ajoute le contenu dans bashrc
+  chown "$USERNAME:$USERNAME" "$USER_HOME/.bashrc" # change le proprio de bashrc
   log ".bashrc customized."
-else
+else # fichier non trouvé donc il renvoie cette erreur
   log "bashrc.append not found."
 fi
 
 # === 5. PERSONNALISATION DU .nanorc ===
-if [ -f "$CONFIG_DIR/nanorc.append" ]; then
+if [ -f "$CONFIG_DIR/nanorc.append" ]; then # fait exactement pareil que pour bashrc
   cat "$CONFIG_DIR/nanorc.append" >> "$USER_HOME/.nanorc"
   chown "$USERNAME:$USERNAME" "$USER_HOME/.nanorc"
   log ".nanorc customized."
