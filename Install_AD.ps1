@@ -1,26 +1,34 @@
-# Installation des rôles AD DS et outils de gestion
-Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools
+# Définition des paramètres du domaine
+$DomainName = "quentin.local"  # Nom du domaine
+$NetBiosName = "QUENTIN"       # Nom NetBIOS
+$SafeModePassword = "M0tDeP@ssAD!"    # Mot de passe du mode restauration
 
-# Vérification de l’installation
-if ((Get-WindowsFeature -Name AD-Domain-Services).InstallState -ne "Installed") {
-    Write-Host "L'installation d'Active Directory a échoué !" -ForegroundColor Red
-    exit 1
+# Vérifier si AD DS est déjà installé
+if (Get-WindowsFeature -Name AD-Domain-Services | Where-Object { $_.Installed -eq $true }) {
+    Write-Host "Le rôle AD DS est déjà installé."
+} else {
+    # Installation du rôle AD DS
+    Write-Host "Installation du rôle Active Directory..."
+    Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools
 }
 
-# Promotion du serveur en contrôleur de domaine
-Install-ADDSForest `
--DomainName "quentin.com" `
--CreateDnsDelegation:$false `
--DatabasePath "C:\Windows\NTDS" `
--DomainMode "Win2016" `
--ForestMode "Win2016" `
--InstallDns:$true `
--LogPath "C:\Windows\NTDS" `
--NoRebootOnCompletion:$true `
--SysvolPath "C:\Windows\SYSVOL" `
--Force:$true
+# Vérifier si le domaine existe déjà
+if (-not (Get-ADDomain -ErrorAction SilentlyContinue)) {
+    Write-Host "Création d'un nouveau domaine : $DomainName"
 
-# Redémarrage du serveur pour finaliser l’installation
-Write-Host "Redémarrage du serveur dans 10 secondes..."
-Start-Sleep -Seconds 10
-Restart-Computer -Force
+    # Création du domaine Active Directory
+    Install-ADDSForest `
+        -DomainName $DomainName `
+        -DomainNetbiosName $NetBiosName `
+        -SafeModeAdministratorPassword (ConvertTo-SecureString $SafeModePassword -AsPlainText -Force) `
+        -InstallDns `
+        -Force
+
+    Write-Host "Le contrôleur de domaine a été configuré avec succès !"
+    
+    # Redémarrage du serveur pour appliquer la configuration
+    Write-Host "Redémarrage du serveur..."
+    Restart-Computer -Force
+} else {
+    Write-Host "Le domaine existe déjà : $DomainName"
+}
