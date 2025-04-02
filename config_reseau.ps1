@@ -32,9 +32,6 @@ if ($interface) {
     Get-NetIPAddress -InterfaceAlias $interfaceName | Format-Table
     Get-DnsClientServerAddress -InterfaceAlias $interfaceName | Format-Table
 
-    # Redémarrage pour appliquer toutes les modifications
-    Write-Host "Redémarrage du système pour appliquer les modifications..."
-    "Restart-Computer -Force"
 } else {
     Write-Host "⚠️ Erreur : L'interface réseau '$interfaceName' n'a pas été trouvée ou est inactive."
 }
