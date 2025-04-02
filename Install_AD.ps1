@@ -1,7 +1,7 @@
 # Définition des paramètres du domaine
 $DomainName = "quentin.local"  # Nom du domaine
 $NetBiosName = "QUENTIN"       # Nom NetBIOS
-$SafeModePassword = "M0tDeP@ssAD!"    # Mot de passe du mode restauration
+$SafeModePassword = "Root2024*"    # Mot de passe du mode restauration
 
 # Vérifier si AD DS est déjà installé
 if (Get-WindowsFeature -Name AD-Domain-Services | Where-Object { $_.Installed -eq $true }) {
