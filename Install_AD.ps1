@@ -9,7 +9,7 @@ if ((Get-WindowsFeature -Name AD-Domain-Services).InstallState -ne "Installed") 
 
 # Promotion du serveur en contrôleur de domaine
 Install-ADDSForest `
--DomainName "monentreprise.local" `
+-DomainName "quentin.com" `
 -CreateDnsDelegation:$false `
 -DatabasePath "C:\Windows\NTDS" `
 -DomainMode "Win2016" `
