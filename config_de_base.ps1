@@ -1,10 +1,40 @@
-# Définition du nom du serveur
-Rename-Computer -NewName "AD-Server" -Force
+# Paramètres réseau
+$ipAddress = "192.168.0.100"
+$subnetMask = 24  # Windows utilise un préfixe (ex: 255.255.255.0 = 24)
+$gateway = "192.168.0.254"
+$dnsServer = "1.1.1.1"
+$interfaceName = "Ethernet0"  # ⚠️ Vérifie avec Get-NetAdapter
 
-# Configuration de l'adresse IP statique
-New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 192.168.1.100 -PrefixLength 24 -DefaultGateway 192.168.1.254
-Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 192.168.1.100
+# Vérifier si l'interface existe
+$interface = Get-NetAdapter | Where-Object { $_.Name -eq $interfaceName -and $_.Status -eq "Up" }
 
-# Activation du pare-feu avec règles spécifiques
-New-NetFirewallRule -DisplayName "Allow AD Traffic" -Direction Inbound -Protocol TCP -LocalPort 389,636,53 -Action Allow
+if ($interface) {
+    Write-Host "Interface trouvée : $interfaceName"
+    
+    # Supprimer toutes les adresses IP existantes
+    Write-Host "Suppression des IPs existantes..."
+    Get-NetIPAddress -InterfaceAlias $interfaceName -AddressFamily IPv4 | Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue
 
+    # Supprimer la passerelle existante
+    Write-Host "Suppression de la passerelle existante..."
+    Remove-NetRoute -InterfaceAlias $interfaceName -Confirm:$false -ErrorAction SilentlyContinue
+
+    # Appliquer la nouvelle configuration IP
+    Write-Host "Application de la nouvelle configuration IP..."
+    New-NetIPAddress -InterfaceAlias $interfaceName -IPAddress $ipAddress -PrefixLength $subnetMask -DefaultGateway $gateway -ErrorAction Stop
+
+    # Configuration du DNS
+    Write-Host "Configuration du DNS manuel : $dnsServer"
+    Set-DnsClientServerAddress -InterfaceAlias $interfaceName -ServerAddresses $dnsServer -ErrorAction Stop
+
+    # Vérification des paramètres appliqués
+    Write-Host "Configuration appliquée :"
+    Get-NetIPAddress -InterfaceAlias $interfaceName | Format-Table
+    Get-DnsClientServerAddress -InterfaceAlias $interfaceName | Format-Table
+
+    # Redémarrage pour appliquer toutes les modifications
+    Write-Host "Redémarrage du système pour appliquer les modifications..."
+    "Restart-Computer -Force"
+} else {
+    Write-Host "⚠️ Erreur : L'interface réseau '$interfaceName' n'a pas été trouvée ou est inactive."
+}
