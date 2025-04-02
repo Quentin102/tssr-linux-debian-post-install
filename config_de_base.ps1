@@ -8,5 +8,3 @@ Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 192.168.1
 # Activation du pare-feu avec règles spécifiques
 New-NetFirewallRule -DisplayName "Allow AD Traffic" -Direction Inbound -Protocol TCP -LocalPort 389,636,53 -Action Allow
 
-# Redémarrage du serveur pour appliquer les changements
-Restart-Computer -Force
