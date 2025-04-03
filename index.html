@@ -41,19 +41,30 @@
             overflow-x: auto;
         }
 
+        .github-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #1e1e1e;
+            background-color: #00ff00;
+            border: 2px solid #00ff00;
+            text-decoration: none;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px #00ff00;
+            transition: 0.3s;
+        }
+
+        .github-link:hover {
+            background-color: #1e1e1e;
+            color: #00ff00;
+        }
+
         footer {
             margin-top: 20px;
             font-size: 0.9em;
             opacity: 0.7;
-        }
-
-        a {
-            color: #00ff00;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
         }
     </style>
 </head>
@@ -75,9 +86,9 @@ echo "set linenumbers" >> ~/.nanorc
             </pre>
         </div>
 
-        <p>
-            Consultez le repository sur <a href="https://github.com/Quentin102/tssr-linux-debian-post-install.git" target="_blank">GitHub</a> pour plus de détails.
-        </p>
+        <a class="github-link" href="https://github.com/Quentin102/tssr-linux-debian-post-install.git" target="_blank">
+            🔗 Voir le Repository GitHub
+        </a>
     </div>
 
     <footer>
