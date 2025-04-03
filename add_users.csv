@@ -1,0 +1,3 @@
+SamAccountName,GivenName,Surname,Role,Password
+jdupont,Jean,Dupont,USER,P@ssw0rd
+mlefevre,Marie,Lefevre,ADMIN,P@ssw0rd
